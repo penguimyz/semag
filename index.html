@@ -71,6 +71,7 @@
 <footer>static · github pages</footer>
 
 <script>
+<script>
   const GAMES = [
     { name: "Tiny Fishing",       file: "tiny_fishing.html",       tag: "io" },
     { name: "A Dance of Fire and Ice", file: "adofai.html",        tag: "rhythm" },
@@ -85,14 +86,13 @@
     { name: "Minecraft",          file: "minecraft.html",          tag: "sandbox" },
     { name: "Slope",              file: "slope/index.html",        tag: "arcade" },
     { name: "Sand Tetris",        file: "sand_tetris.html",        tag: "arcade" },
-    { name: "Doge Miner",         file: "doge_miner.html",         tag: "idle" },
   ];
 
   const grid = document.getElementById("grid");
   for (const g of GAMES) {
     const a = document.createElement("a");
     a.className = "tile";
-    a.href = "games/" + g.file;
+    a.href = "play.html?g=" + encodeURIComponent(g.file);
     a.innerHTML = `
       <div class="name"></div>
       <div class="meta">${g.file}</div>

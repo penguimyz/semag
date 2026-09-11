@@ -41,14 +41,6 @@
     background: rgba(35, 35, 42, 0.95);
     border-color: #4a4a55;
   }
-  /* the blank cover — plain white, looks like about:blank */
-  #blank {
-    position: fixed; inset: 0;
-    z-index: 2147483646;
-    background: #ffffff;
-    display: none;
-  }
-  #blank.on { display: block; }
 </style>
 </head>
 <body>
@@ -58,11 +50,8 @@
 
 <div id="bar">
   <button id="back" title="back to launcher">← back</button>
-  <button id="blankBtn" title="flip to about:blank (press \ or back)">blank</button>
   <button id="full" title="fullscreen">⛶</button>
 </div>
-
-<div id="blank"></div>
 
 <script>
   const params = new URLSearchParams(location.search);
@@ -75,64 +64,10 @@
   const frame = document.getElementById("frame");
   frame.src = "games/" + g;
 
-  const blank = document.getElementById("blank");
-  const bar = document.getElementById("bar");
-
-  // was the blank state pushed via history (so back should unblank)?
-  let blanked = false;
-
-  function showBlank() {
-    if (blanked) return;
-    blanked = true;
-    blank.classList.add("on");
-    // change the tab title + URL bar without unloading the iframe
-    document.title = "about:blank";
-    try {
-      history.pushState({ blank: true }, "", "about:blank");
-    } catch (e) {
-      // some Chrome builds refuse cross-scheme pushState — fall back
-      try { history.pushState({ blank: true }, "", "#blank"); } catch (_) {}
-    }
-  }
-
-  function hideBlank() {
-    if (!blanked) return;
-    blanked = false;
-    blank.classList.remove("on");
-    document.title = "playing…";
-  }
-
-  // clicking blank toggles into about:blank mode
-  document.getElementById("blankBtn").addEventListener("click", () => {
-    if (blanked) {
-      // un-blank via history so back stays consistent
-      history.back();
-    } else {
-      showBlank();
-    }
-  });
-
-  // back button of the bar → return to the launcher
   document.getElementById("back").addEventListener("click", () => {
     location.href = "index.html";
   });
 
-  // browser back (or swipe) while blanked → un-blank instead of leaving the page
-  window.addEventListener("popstate", () => {
-    if (blanked) hideBlank();
-  });
-
-  // backslash toggles the same way
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "\\") {
-      e.preventDefault();
-      if (blanked) history.back();
-      else showBlank();
-    }
-    if (e.key === "Escape" && blanked) history.back();
-  });
-
-  // fullscreen
   document.getElementById("full").addEventListener("click", () => {
     const el = document.documentElement;
     if (!document.fullscreenElement) {
@@ -142,6 +77,7 @@
     }
   });
 
+  const bar = document.getElementById("bar");
   bar.classList.add("show");
   setTimeout(() => bar.classList.remove("show"), 1500);
 </script>

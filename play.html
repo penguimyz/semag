@@ -4,110 +4,70 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>playing…</title>
+<link rel="icon" href="data:,">
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
   html, body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    background: #0e0e10;
-    overflow: hidden;
+    margin: 0; padding: 0; height: 100%;
+    background: #0e0e10; overflow: hidden;
     font: 14px/1.4 system-ui, -apple-system, sans-serif;
     color: #e6e6e6;
   }
-
   #frame {
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    border: 0;
-    display: block;
-    background: #000;
+    position: fixed; inset: 0;
+    width: 100%; height: 100%; border: 0;
+    display: block; background: #000;
   }
-
-  /* the bar — floats over the game, top-left */
   #bar {
-    position: fixed;
-    top: 12px;
-    left: 12px;
+    position: fixed; top: 12px; left: 12px;
     z-index: 2147483647;
-    display: flex;
-    gap: 8px;
+    display: flex; gap: 8px;
     opacity: 0.25;
     transition: opacity 0.15s ease;
   }
   #bar:hover, #bar.show { opacity: 1; }
-
   #bar button {
-    all: unset;
-    cursor: pointer;
+    all: unset; cursor: pointer;
     padding: 6px 12px;
     background: rgba(20, 20, 24, 0.9);
     border: 1px solid #33333c;
     border-radius: 8px;
     color: #e6e6e6;
-    font: inherit;
-    font-weight: 600;
+    font: inherit; font-weight: 600;
     backdrop-filter: blur(6px);
   }
   #bar button:hover {
     background: rgba(35, 35, 42, 0.95);
     border-color: #4a4a55;
   }
-
-  /* the blanker — full-screen cover */
+  /* the blank cover — plain white, looks like about:blank */
   #blank {
-    position: fixed;
-    inset: 0;
+    position: fixed; inset: 0;
     z-index: 2147483646;
-    background: #0e0e10;
+    background: #ffffff;
     display: none;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 16px;
-    color: #55555c;
   }
-  #blank.on { display: flex; }
-  #blank .msg { font-size: 18px; letter-spacing: 0.02em; }
-  #blank .hint { font-size: 12px; color: #33333a; }
-
-  /* small "esc to exit blank" reminder bottom-right when blanked */
-  #blank .unblank {
-    all: unset;
-    cursor: pointer;
-    padding: 8px 16px;
-    border: 1px solid #2a2a30;
-    border-radius: 8px;
-    color: #8a8a92;
-    font: inherit;
-  }
-  #blank .unblank:hover { color: #e6e6e6; border-color: #3a3a42; }
+  #blank.on { display: block; }
 </style>
 </head>
 <body>
 
-<iframe id="frame" src="about:blank" allow="fullscreen; autoplay; gamepad; microphone; camera; clipboard-read; clipboard-write"></iframe>
+<iframe id="frame" src="about:blank"
+        allow="fullscreen; autoplay; gamepad; microphone; camera; clipboard-read; clipboard-write"></iframe>
 
 <div id="bar">
   <button id="back" title="back to launcher">← back</button>
-  <button id="blankBtn" title="cover the screen (press \ or click)">blank</button>
+  <button id="blankBtn" title="flip to about:blank (press \ or back)">blank</button>
   <button id="full" title="fullscreen">⛶</button>
 </div>
 
-<div id="blank">
-  <div class="msg">nothing here</div>
-  <div class="hint">press <b>\</b> or click to return</div>
-  <button class="unblank" id="unblankBtn">resume</button>
-</div>
+<div id="blank"></div>
 
 <script>
   const params = new URLSearchParams(location.search);
   const g = params.get("g") || "";
 
-  // basic guard — no path traversal, only allow files inside /games
   if (!g || g.includes("..") || g.startsWith("/") || g.includes("://")) {
     location.replace("index.html");
   }
@@ -118,32 +78,58 @@
   const blank = document.getElementById("blank");
   const bar = document.getElementById("bar");
 
-  function toggleBlank(force) {
-    const on = force !== undefined ? force : !blank.classList.contains("on");
-    blank.classList.toggle("on", on);
+  // was the blank state pushed via history (so back should unblank)?
+  let blanked = false;
+
+  function showBlank() {
+    if (blanked) return;
+    blanked = true;
+    blank.classList.add("on");
+    // change the tab title + URL bar without unloading the iframe
+    document.title = "about:blank";
+    try {
+      history.pushState({ blank: true }, "", "about:blank");
+    } catch (e) {
+      // some Chrome builds refuse cross-scheme pushState — fall back
+      try { history.pushState({ blank: true }, "", "#blank"); } catch (_) {}
+    }
   }
 
+  function hideBlank() {
+    if (!blanked) return;
+    blanked = false;
+    blank.classList.remove("on");
+    document.title = "playing…";
+  }
+
+  // clicking blank toggles into about:blank mode
+  document.getElementById("blankBtn").addEventListener("click", () => {
+    if (blanked) {
+      // un-blank via history so back stays consistent
+      history.back();
+    } else {
+      showBlank();
+    }
+  });
+
+  // back button of the bar → return to the launcher
   document.getElementById("back").addEventListener("click", () => {
     location.href = "index.html";
   });
 
-  document.getElementById("blankBtn").addEventListener("click", () => toggleBlank());
-  document.getElementById("unblankBtn").addEventListener("click", () => toggleBlank(false));
-
-  // click anywhere on the blanker resumes
-  blank.addEventListener("click", (e) => {
-    if (e.target === blank) toggleBlank(false);
+  // browser back (or swipe) while blanked → un-blank instead of leaving the page
+  window.addEventListener("popstate", () => {
+    if (blanked) hideBlank();
   });
 
-  // backslash toggles the blanker, Escape also resumes
+  // backslash toggles the same way
   document.addEventListener("keydown", (e) => {
     if (e.key === "\\") {
       e.preventDefault();
-      toggleBlank();
+      if (blanked) history.back();
+      else showBlank();
     }
-    if (e.key === "Escape" && blank.classList.contains("on")) {
-      toggleBlank(false);
-    }
+    if (e.key === "Escape" && blanked) history.back();
   });
 
   // fullscreen
@@ -156,7 +142,6 @@
     }
   });
 
-  // make the bar visible briefly on load, then fade to its idle state
   bar.classList.add("show");
   setTimeout(() => bar.classList.remove("show"), 1500);
 </script>

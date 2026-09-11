@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>games</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font: 16px/1.4 system-ui, -apple-system, sans-serif;
+    background: #0e0e10;
+    color: #e6e6e6;
+    min-height: 100vh;
+  }
+  header {
+    padding: 32px 24px 16px;
+    border-bottom: 1px solid #1e1e22;
+  }
+  h1 { margin: 0; font-weight: 600; letter-spacing: -0.02em; }
+  p.sub { margin: 4px 0 0; color: #8a8a92; font-size: 14px; }
+  main {
+    padding: 24px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  a.tile {
+    display: block;
+    padding: 18px 16px;
+    background: #16161a;
+    border: 1px solid #23232a;
+    border-radius: 10px;
+    color: #e6e6e6;
+    text-decoration: none;
+    transition: background 0.12s, border-color 0.12s, transform 0.12s;
+  }
+  a.tile:hover {
+    background: #1d1d23;
+    border-color: #33333c;
+    transform: translateY(-1px);
+  }
+  a.tile .name { font-weight: 600; }
+  a.tile .meta { font-size: 12px; color: #8a8a92; margin-top: 4px; }
+  a.tile .tag {
+    display: inline-block;
+    font-size: 11px;
+    padding: 1px 7px;
+    border-radius: 4px;
+    background: #23232a;
+    color: #b0b0b8;
+    margin-top: 8px;
+  }
+  footer {
+    text-align: center;
+    padding: 24px;
+    color: #55555c;
+    font-size: 12px;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>games</h1>
+  <p class="sub">a small arcade</p>
+</header>
+<main id="grid"></main>
+<footer>static · github pages</footer>
+
+<script>
+  // edit this list — name is what shows, file is the html in /games
+  const GAMES = [
+    { name: "Tiny Fishing",       file: "tiny_fishing.html",       tag: "io" },
+    { name: "A Dance of Fire and Ice", file: "adofai.html",        tag: "rhythm" },
+    { name: "Basket Bros",        file: "basket_bros.html",        tag: "io" },
+    { name: "BitLife",            file: "bitlife.html",            tag: "sim" },
+    { name: "Bloons TD5",         file: "bloons_td5.html",         tag: "tower defense" },
+    { name: "Brotato",            file: "brotato.html",            tag: "roguelite" },
+    { name: "Buckshot Roulette",  file: "buckshot_roulette.html",  tag: "horror" },
+    { name: "Clover Pit",         file: "clover_pit.html",         tag: "roguelite" },
+    { name: "Cookie Clicker",     file: "cookie_clicker.html",     tag: "idle" },
+    { name: "Geometry Dash",      file: "geometry_dash.html",      tag: "platformer" },
+    { name: "Minecraft",          file: "minecraft.html",          tag: "sandbox" },
+  ];
+
+  const grid = document.getElementById("grid");
+  for (const g of GAMES) {
+    const a = document.createElement("a");
+    a.className = "tile";
+    a.href = "games/" + g.file;
+    a.innerHTML = `
+      <div class="name"></div>
+      <div class="meta">${g.file}</div>
+      <span class="tag"></span>
+    `;
+    a.querySelector(".name").textContent = g.name;
+    a.querySelector(".tag").textContent = g.tag;
+    grid.appendChild(a);
+  }
+</script>
+</body>
+</html>

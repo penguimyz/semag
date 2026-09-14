@@ -46,43 +46,25 @@
     transition: background 0.12s, border-color 0.12s;
   }
   a.submit:hover { background: #1d1d23; border-color: #33333c; }
+  .warn {
+    font-size: 12px;
+    color: #8a8a92;
+    border-left: 2px solid #33333c;
+    padding: 4px 0 4px 10px;
+    margin: 0 0 20px;
+  }
   .item {
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
     padding: 14px 0;
     border-top: 1px solid #1e1e22;
   }
   .item:last-child { border-bottom: 1px solid #1e1e22; }
-  .item .info { flex: 1; min-width: 0; }
-  .item .name {
-    font-weight: 600;
-    color: #e6e6e6;
-    text-decoration: none;
-  }
-  .item .name:hover { text-decoration: underline; }
+  .item .name { font-weight: 600; color: #e6e6e6; }
   .item .meta {
-    font-size: 12px;
+    font-size: 13px;
     color: #8a8a92;
     margin-top: 4px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: pre-wrap;
   }
-  .like {
-    font: inherit;
-    font-size: 12px;
-    background: #16161a;
-    border: 1px solid #23232a;
-    color: #b0b0b8;
-    padding: 4px 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    flex-shrink: 0;
-    transition: background 0.12s, border-color 0.12s, color 0.12s;
-  }
-  .like:hover { background: #1d1d23; border-color: #33333c; color: #e6e6e6; }
-  .like.done { border-color: #33333c; color: #e6e6e6; }
   .msg { color: #55555c; font-size: 14px; padding: 16px 0; }
   footer {
     text-align: center;
@@ -95,74 +77,89 @@
 <body>
 <header>
   <h1>requests</h1>
-  <p class="sub">ask for a game or +1 one you want</p>
+  <p class="sub">ask for a game to be added</p>
 </header>
 <main>
   <a class="back" href="index.html">← back</a><br>
-  <a class="submit" href="https://github.com/penguimyz/semag/issues/new?template=game-request.md" target="_blank" rel="noopener">new request</a>
+  <a class="submit" href="https://forms.gle/CX6uApnphR4vgy968" target="_blank" rel="noopener">new request</a>
+  <p class="warn">no online games like roblox — too hard to host</p>
   <div id="list"><div class="msg">loading…</div></div>
 </main>
 <footer>static · github pages</footer>
 
 <script>
-  const REPO = "penguimyz/semag";
-  const LABEL = "game-request";
-  const liked = new Set(JSON.parse(localStorage.getItem("liked") || "[]"));
+  const CSV_URL = "PASTE_YOUR_CSV_URL_HERE";
   const list = document.getElementById("list");
 
-  fetch(`https://api.github.com/repos/${REPO}/issues?labels=${LABEL}&state=open&per_page=50`)
-    .then(r => r.ok ? r.json() : Promise.reject())
-    .then(render)
-    .catch(() => { list.innerHTML = '<div class="msg">couldnt load requests</div>'; });
+  if (CSV_URL.includes("PASTE_")) {
+    list.innerHTML = '<div class="msg">csv url not set — see setup notes</div>';
+  } else {
+    fetch(CSV_URL)
+      .then(r => r.ok ? r.text() : Promise.reject())
+      .then(csv => render(parseCSV(csv)))
+      .catch(() => { list.innerHTML = '<div class="msg">couldnt load requests</div>'; });
+  }
 
-  function render(issues) {
-    if (!issues.length) {
+  function parseCSV(text) {
+    const rows = [];
+    let row = [], field = "", inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (inQuotes) {
+        if (c === '"' && text[i+1] === '"') { field += '"'; i++; }
+        else if (c === '"') { inQuotes = false; }
+        else { field += c; }
+      } else {
+        if (c === '"') inQuotes = true;
+        else if (c === ",") { row.push(field); field = ""; }
+        else if (c === "\n") { row.push(field); rows.push(row); row = []; field = ""; }
+        else if (c === "\r") { /* skip */ }
+        else field += c;
+      }
+    }
+    if (field.length || row.length) { row.push(field); rows.push(row); }
+    return rows.filter(r => r.some(c => c.trim() !== ""));
+  }
+
+  function render(rows) {
+    if (rows.length < 2) {
       list.innerHTML = '<div class="msg">nothing here yet</div>';
       return;
     }
+
+    const headers = rows[0].map(h => h.toLowerCase().trim());
+    const nameIdx = headers.findIndex(h => h.includes("game"));
+    const whyIdx  = headers.findIndex(h => h.includes("why") || h.includes("added"));
+
+    if (nameIdx === -1) {
+      list.innerHTML = '<div class="msg">couldnt find a "game name" column</div>';
+      return;
+    }
+
     list.innerHTML = "";
-    for (const it of issues) {
-      const n = (it.reactions && it.reactions["+1"]) || 0;
-      const isLiked = liked.has(it.number);
-      const body = (it.body || "").replace(/\s+/g, " ").trim();
+    const data = rows.slice(1);
+    for (let i = data.length - 1; i >= 0; i--) {
+      const r = data[i];
+      const name = (r[nameIdx] || "").trim();
+      const why  = whyIdx >= 0 ? (r[whyIdx] || "").trim() : "";
+      if (!name) continue;
 
-      const row = document.createElement("div");
-      row.className = "item";
+      const item = document.createElement("div");
+      item.className = "item";
 
-      const info = document.createElement("div");
-      info.className = "info";
+      const nm = document.createElement("div");
+      nm.className = "name";
+      nm.textContent = name;
+      item.appendChild(nm);
 
-      const name = document.createElement("a");
-      name.className = "name";
-      name.href = it.html_url;
-      name.target = "_blank";
-      name.rel = "noopener";
-      name.textContent = it.title;
-      info.appendChild(name);
-
-      if (body) {
-        const meta = document.createElement("div");
-        meta.className = "meta";
-        meta.textContent = body;
-        info.appendChild(meta);
+      if (why) {
+        const m = document.createElement("div");
+        m.className = "meta";
+        m.textContent = why;
+        item.appendChild(m);
       }
 
-      const btn = document.createElement("button");
-      btn.className = "like" + (isLiked ? " done" : "");
-      btn.textContent = "+1 " + n;
-      btn.addEventListener("click", () => {
-        if (!liked.has(it.number)) {
-          liked.add(it.number);
-          localStorage.setItem("liked", JSON.stringify([...liked]));
-          btn.textContent = "+1 " + (n + 1);
-          btn.classList.add("done");
-        }
-        window.open(it.html_url, "_blank", "noopener");
-      });
-
-      row.appendChild(info);
-      row.appendChild(btn);
-      list.appendChild(row);
+      list.appendChild(item);
     }
   }
 </script>

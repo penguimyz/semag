@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>semag</title>
 <style>
@@ -20,6 +20,14 @@
   }
   h1 { margin: 0; font-weight: 600; letter-spacing: -0.02em; }
   p.sub { margin: 4px 0 0; color: #8a8a92; font-size: 14px; }
+  header a.req {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 13px;
+    color: #8a8a92;
+    text-decoration: none;
+  }
+  header a.req:hover { color: #e6e6e6; }
   main {
     padding: 24px;
     display: grid;
@@ -66,6 +74,7 @@
 <header>
   <h1>games</h1>
   <p class="sub">tuff games list twin</p>
+  <a class="req" href="requests.html">requests →</a>
 </header>
 <main id="grid"></main>
 <footer>static · github pages</footer>
@@ -85,8 +94,8 @@
     { name: "Minecraft",          file: "minecraft.html",          tag: "sandbox" },
     { name: "Slope",              file: "slope/index.html",        tag: "arcade" },
     { name: "Sand Tetris",        file: "sand_tetris.html",        tag: "arcade" },
-    { name: "Doge Miner",         file: "dogeminer/index.html",   tag: "idle" },
-    { name: "Retro Bowl",         file: "retrobowl/index.html",   tag: "sim" },
+    { name: "Doge Miner",         file: "dogeminer/index.html",    tag: "idle" },
+    { name: "Retro Bowl",         file: "retrobowl/index.html",    tag: "sim" },
   ];
 
   const grid = document.getElementById("grid");
@@ -104,5 +113,6 @@
     grid.appendChild(a);
   }
 </script>
+
 </body>
 </html>

@@ -82,17 +82,17 @@
 <main>
   <a class="back" href="index.html">← back</a><br>
   <a class="submit" href="https://forms.gle/CX6uApnphR4vgy968" target="_blank" rel="noopener">new request</a>
-  <p class="warn">no online games like roblox — too hard to host</p>
+  <p class="warn">no online games like roblox, too hard to host</p>
   <div id="list"><div class="msg">loading…</div></div>
 </main>
 <footer>static · github pages</footer>
 
 <script>
-  const CSV_URL = "PASTE_YOUR_CSV_URL_HERE";
+  const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTnBz-Pp2WGXgDFkuN0ckhUqGZy994nKztQIB1fjMk2fjt1u6KRSMV1VrTxsLZsh5PalCUfsTpinaF_/pub?gid=85628962&single=true&output=csv";
   const list = document.getElementById("list");
 
   if (CSV_URL.includes("PASTE_")) {
-    list.innerHTML = '<div class="msg">csv url not set — see setup notes</div>';
+    list.innerHTML = '<div class="msg">hi</div>';
   } else {
     fetch(CSV_URL)
       .then(r => r.ok ? r.text() : Promise.reject())
